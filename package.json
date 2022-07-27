@@ -9,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/cbh6/vuejs-socketio-chat"
   },
+  "scripts": {
+    "start": "nodemon server.js"
+  },
   "keywords": [
     "node",
     "express",
@@ -20,6 +23,7 @@
     "dateformat": "^2.0.0",
     "express": "^4.15.4",
     "font-awesome": "^4.7.0",
+    "nodemon": "^2.0.19",
     "serve-favicon": "^2.4.3",
     "socket.io": "^2.0.3",
     "vue": "^2.4.2"
