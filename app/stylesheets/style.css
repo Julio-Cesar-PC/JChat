@@ -1,0 +1,35 @@
+body {
+  background: linear-gradient(146deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(38,7,146,1) 47%, rgba(164,0,255,1) 100%);
+  height: 100vh;
+}
+
+.messages{
+	overflow: auto;
+	height: 400px;
+}
+
+.controls{
+	padding-top: 5px;
+}
+
+#mainContainer {
+  background-color: rgba(255, 255, 255, 0.792);
+}
+
+.fades-leave-to {
+  transition: opacity .5s
+}
+
+/* Enter and leave animations can use different */
+/* durations and timing functions.              */
+.slide-fade-enter-active {
+  transition: all .8s ease;
+}
+.slide-fade-leave-active {
+  transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
