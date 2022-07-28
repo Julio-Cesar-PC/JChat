@@ -2,10 +2,23 @@
  (function() {
   var socket = io();
   // Message Component
-  Vue.component('message', {
+  Vue.component('author-message', {
     props: ['messageData'],
-    template: ` <div class="media-content">
-                        <div class="content">
+    template: ` <div class="flex justify-end">
+                        <div class="bg-white p-2 w-fit rounded-xl">
+                            <p>
+                                <strong>{{messageData.user}}</strong> <small>{{messageData.date}}</small>
+                                <br>
+                                {{messageData.text}}
+                            </p>
+                        </div>
+                    </div>`
+  });
+
+  Vue.component('others-message', {
+    props: ['messageData'],
+    template: ` <div class="">
+                        <div class="bg-white p-2 w-fit rounded-xl">
                             <p>
                                 <strong>{{messageData.user}}</strong> <small>{{messageData.date}}</small>
                                 <br>
@@ -24,12 +37,8 @@
     },
     props: ['isJoined'],
     template: ` <div class="flex gap-2 items-center justify-center border-t border-gray-200">
-                        <div class="">
-                            <input v-model="message" v-on:keydown.enter="send" class="p-1 mt-2 border border-blue-400 w-full rounded-md" placeholder="Write message">
-                        </div>
-                        <div class="">
-                            <button id="btn" v-on:click="send" :disabled="!message" class="mt-2 bg-blue-600 text-white p-2 rounded-xl">Send</button>
-                        </div>
+                        <input v-model="message" v-on:keydown.enter="send" class="p-1 mt-2 border border-blue-400 w-full rounded-md" placeholder="Write message">
+                        <button id="btn" v-on:click="send" :disabled="!message" class="mt-2 bg-blue-600 text-white p-2 rounded-xl">Send</button>
                     </div>`,
     methods: {
       send: function() {
@@ -43,22 +52,25 @@
 
   // Input Room Component
   Vue.component('input-room', {
-    props: ['isJoined'],
+    props: ['isJoined', 'isLogged'],
     data: function() {
       return {
-        room: ''
+        currentRoom: ''
       };
     },
-    template: ` <div class="flex gap-2 items-center" v-show="!isJoined">
-                            <input v-model="room" v-on:keydown.enter="join" class="p-1 mt-2 border border-blue-400 w-full rounded-md" placeholder="Write room">
-                            <button id="btn" v-on:click="join" :disabled="!room" class="mt-2 bg-blue-600 text-white p-2 rounded-xl">Join</button>
+    template: ` <div class="flex gap-2 items-center" v-show="isLogged">
+							<div class="flex flex-col">
+								<label class="text-gray-600" for="currentRoom">Room:</label>
+								<input name="currentRoom" v-model="currentRoom" v-on:keydown.enter="join" class="p-1 mt-2 border border-blue-400 w-full rounded-md" placeholder="Write room">
+							</div>
+                            <button id="btn" v-on:click="join" :disabled="!currentRoom" class="mt-2 bg-blue-600 text-white p-2 rounded-xl">Join</button>
                         
                     </div>`,
     methods: {
       join: function() {
-        if (this.room.length > 0) {
+        if (this.currentRoom.length > 0) {
           // console.log('join: ' + this.room);
-          this.$emit('join-room', this.room);
+          this.$emit('join-room', this.currentRoom);
         }
       },
     }
@@ -74,12 +86,11 @@
     },
     template: `<div id="nameInput" v-show="!isLogged">
                         <div class="flex gap-2 items-center">
-                            <div class="">
-                                <input v-model="userName" v-on:keydown.enter="sendUserName" class="p-1 mt-2 border border-blue-400 w-full rounded-md" placeholder="Your name">
-                            </div>
-                            <div class="">
-                                <button id="btn" v-on:click="sendUserName" :disabled="!userName" class="mt-2 bg-blue-600 text-white p-2 rounded-xl">Enter</button>
-                            </div>
+							<div class="flex flex-col">
+								<label class="text-gray-600" for="username">Username:</label>
+                            	<input name="username" v-model="userName" v-on:keydown.enter="sendUserName" class="p-1 mt-2 border border-blue-400 w-full rounded-md" placeholder="Your name">
+							</div>
+                            <button id="btn" v-on:click="sendUserName" :disabled="!userName" class="mt-2 bg-blue-600 text-white p-2 rounded-xl">Enter</button>
                         </div>
                     </div>`,
     methods: {
@@ -93,20 +104,31 @@
 
   // Users component
   Vue.component('users', {
-    props: ['users', 'room', 'username', 'isJoined'],
+    props: ['users', 'currentroom', 'username', 'isJoined', 'rooms'],
     template: ` <div>
-                        <h4 class="title is-4">Sala: {{ isJoined ? room : 'Lobby' }} ({{users.length}})</h4>
-                        <ul > Ususários conectados:
+                        <h4 class="title is-4"><strong>Sala:</strong> {{ isJoined ? currentroom  : 'Espera' }} ({{users.length}})</h4>
+                        <ul><strong>Usuários conectados:</strong>
                             <li class="border-t border-gray-300" v-for="user in users">
                                 <div class="media-content">
                                     <div class="content">
                                         <p>
-                                            <strong>{{user}}</strong>
+                                            {{ user === username ? 'você' : user }}
                                         </p>
                                     </div>
                                 </div>
                             </li>
                         </ul>
+						<ul><strong>Salas:</strong>
+							<li class="border-t border-gray-300" v-for="room in rooms">
+								<div class="media-content">
+									<div class="content">
+										<p>
+											- {{ room.room }} ({{ room.users.length }})
+										</p>
+									</div>
+								</div>
+							</li>
+						</ul>
                     </div>`
   });
 
@@ -117,20 +139,22 @@
       messages: [],
       users: [],
       userName: '',
-      room: '',
+      currentRoom: '',
+	  rooms: [],
       isLogged: false,
       isJoined: false
     },
     methods: {
       joinRoom: function(room) {
-        this.room = room;
+        this.currentRoom = room;
         this.isJoined = true;
-        socket.emit('join room', {user: this.userName, room: this.room});
-        socket.emit('add-user', { user: this.userName, room: this.room});
+        socket.emit('joinRoom', {user: this.userName, room: this.currentRoom});
+        socket.emit('addUser', { user: this.userName, room: this.currentRoom});
       },
       sendMessage: function(message) {
-        if (message) {
-          socket.emit('send-msg', { message: message, user: this.userName, room: this.room });
+
+        if (message != '' && !onlySpaces(message)) {
+          socket.emit('sendMsg', { message: message, user: this.userName, room: this.currentRoom });
         }
       },
       setName: function(userName) {
@@ -149,29 +173,40 @@
     }
   });
 
-  // Client Socket events
+  function onlySpaces(str) {
+  return str.trim().length === 0;
+}
 
-  socket.on('read-msg', function(message) {
+  // Client Socket events
+  function onlySpaces(str) {
+    return str.trim().length === 0;
+  }
+
+  socket.on('readMsg', function(message) {
     app.messages.push({ text: message.text, user: message.user, date: message.date });
   });
 
-  socket.on('user-connected', function(userId) {
-    console.log('user connected: ' + userId);
+  socket.on('userConnected', function(userId) {
     app.users.push(userId);
   });
 
-  socket.on('user-already-in-room', function(data) {
-    alert(data.user + ' is already in room ' + data.room);
+  socket.on('userAlreadyInRoom', function(data) {
+    alert('O usuário ' + data.user + ' já está na sala ' + data.room + '.\n\n' + 'Tente outro usuário.');
     app.isJoined = false;
     app.isLogged = false;
   });
 
-  // Init chat event. Updates the initial chat with current messages
-  // socket.on('init-chat', function(messages, room) {
-  //   app.messages = messages;
-  // });
+// Init chat event. Updates the initial chat with current messages
+  socket.on('initChat', function(messages) {
+    app.messages = messages;
+  });
 
-  socket.on('update-users', function(users) {
+  socket.on('updateUsers', function(users) {
     app.users = users;
   });
+
+  socket.on('updateRooms', function(rooms) {
+	app.rooms = rooms;
+  });
+
 })();

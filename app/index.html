@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Chat App</title>
-    <link rel="stylesheet" href="npm/bulma/css/bulma.css">
+    <!-- <link rel="stylesheet" href="npm/bulma/css/bulma.css"> -->
     <link rel="stylesheet" href="npm/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="/stylesheets/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,45 +13,53 @@
 <body>
     <div id="app" class="flex justify-center">
         <!-- Chat Box goes here -->
-        <div id="mainContainer" class="mt-10 p-4 rounded-xl max-w-7xl w-full flex flex-wrap gap-10 justify-center"> 
+        <div id="mainContainer" class="mt-10 p-4 rounded-xl max-w-7xl w-full flex flex-wrap gap-10 justify-center">
             <div class="max-w-4xl w-full">
-                <div class="w-full flex gap-2 flex-wrap justify-center items-center bg-white p-4 rounded-xl">
-                    <div class="flex flex-col items-center">
+                <div class="w-full flex gap-2 flex-wrap justify-between items-center bg-white p-4 rounded-xl">
+                    <div class="flex flex-col items-center bg-gray-100 p-2 rounded-xl">
                         <img height="72" width="72" src="images/logo.png" alt="logo" class="logo">
                         <h2>JChat</h2>
                     </div>
-                    <transition name="fade">
+                    <div v-show="isJoined && isLogged" class="flex flex-col bg-gray-100 p-2 rounded-xl">
+                        <h3>User: {{ userName }}</h3>
+                        <h3>Sala: {{ currentRoom }}</h3>
+                    </div>
+                    <div v-show="!isJoined" class="bg-gray-100 p-2 rounded-xl">
                         <input-name :is-logged="isLogged" v-on:set-name="setName"></input-name>
-                    </transition>
-                    <transition name="fade">
-                        <input-room :is-joined="isJoined" v-on:join-room="joinRoom"></input-room>
-                    </transition>
+                        <input-room :is-logged="isLogged" :is-joined="isJoined" v-on:join-room="joinRoom"></input-room>
+                    </div>
                 </div>
                 <!-- message list -->
-                <transition name="slide-fade">
-                    <div v-show="true" class="w-full mt-10 bg-white p-4 rounded-xl">
-                        <div class="messages bg-gray-100 rounded-xl">
-                            <ul>
-                                <li v-for="message in messages">
-                                    <message v-bind:message-data="message"></message>
-                                </li>
-                            </ul>
-                        </div>
-                        <!-- inputs new message -->                
-                        <input-message v-show="isJoined" v-on:send-message="sendMessage"></input-message>
-                    </div>  
-                </transition>
+
+                <div class="w-full mt-10 bg-white p-4 rounded-xl">
+                    <div class="messages p-4 bg-gray-100 rounded-xl">
+                        <ul>
+                            <li v-for="message in messages">
+                                <div v-if="message.user == userName" class="flex justify-end">
+                                    <author-message v-bind:message-data="message"></author-message>
+                                </div>
+                                <div v-else class="flex justify-start">
+                                    <others-message v-bind:message-data="message"></author-message>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- inputs new message -->
+                    <input-message v-show="isJoined" v-on:send-message="sendMessage"></input-message>
+                </div>
+
             </div>
-            
+
             <!-- user list -->
             <div class="bg-white p-4 rounded-xl">
-                <users v-bind:users="users" :is-joined="isJoined" v-bind:room="room" :username="userName" >{{  }}</users>
-            </div>  
-        </div> 
-    </div>   
+                <users v-bind:rooms="rooms" v-bind:users="users" :is-joined="isJoined" v-bind:currentroom="currentRoom" :username="userName"></users>
+            </div>
+        </div>
+    </div>
 
     <script src="npm/vue/dist/vue.js"></script>
     <script src="npm/socket.io-client/dist/socket.io.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>

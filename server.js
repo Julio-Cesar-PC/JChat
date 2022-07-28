@@ -59,6 +59,14 @@ function findRoom(room) {
     return found;
 }
 
+function getArrayOfRooms() {
+    var array = [];
+    rooms.forEach(function (r) {
+        array.push(r.room);
+    });
+    return array;
+}
+
 function findUser(userId) {
     var found = false;
     users.forEach(function (u) {
@@ -94,47 +102,42 @@ function verifyUsersInRoom(room, user) {
 }
 
 io.on('connection', function (socket) {
+    console.log('socket: ' + socket.id + ' connected');
 
-    //users.push(socket.id);
-    // socket.emit('init-chat', messages, room);
-    // socket.emit('update-users', users);
+    io.emit('initRooms', rooms);
 
-    socket.on('join room', function (data) {
-        // console.log(data);
-
+    socket.on('joinRoom', function (data) {
         if (!verifyUsersInRoom(data.room, data.user)) {
-            // console.log('User ' + data.user + ' joined room ' + data.room);
             if (!verifyRoom(data.room)) {
-                // console.log('Room ' + data.room + ' created');
+                console.log('Room: ' + data.room + ' created');
                 rooms.push({ room: data.room, users: [], messages: [] });
-                // console.log(rooms);
-                // console.log('cria sala ' + rooms.find(room => room.room === data.room).room);
             }
             let room = findRoom(data.room);
             room.users = room.users.concat(data.user);
-            // console.log(room.users);
-            socket.emit('update-users', room.users);
             socket.join(data.room);
+            console.log(data.user + ' joined in ' + data.room);
+            socket.emit('updateUsers', room.users);
+            socket.emit('initChat', room.messages);
+            io.emit('updateRooms', rooms);
         } else {
-            // console.log('User ' + data.user + ' already in room ' + data.room);
-            socket.emit('user-already-in-room', { user: data.user, room: data.room });
+            console.log('User ' + data.user + ' already in room ' + data.room);
+            socket.emit('userAlreadyInRoom', { user: data.user, room: data.room });
         }
 
     });
 
-    socket.on('send-msg', function (data) {
+    socket.on('sendMsg', function (data) {
         var newMessage = { room: data.room, text: data.message, user: data.user, date: dateFormat(new Date(), 'shortTime') };
         let room = findRoom(data.room);
         room.messages = room.messages.concat(newMessage);
-        console.log(room);
-        io.to(data.room).emit('read-msg', newMessage);
+        console.log('Message ' + data.message + ' sent by ' + data.user + ' in room ' + data.room);
+        io.to(data.room).emit('readMsg', newMessage);
     });
 
-    socket.on('add-user', function (data) {
+    socket.on('addUser', function (data) {
         users.push({ id: socket.id, name: data.user, room: data.room });
         let usersInRoom = findRoom(data.room).users;
-        console.log(usersInRoom)
-        io.to(data.room).emit('update-users', usersInRoom);
+        io.to(data.room).emit('updateUsers', usersInRoom);
     });
 
     socket.on('disconnect', function () {
@@ -142,14 +145,11 @@ io.on('connection', function (socket) {
             if (verifyRoom(findUser(socket.id).room)) {
                 let room = findRoom(findUser(socket.id).room)
                 room.users = room.users.filter(user => user != findUser(socket.id).name);
-                let usersInRoom = room.users;
-                // usersInRoom.splice(usersInRoom.indexOf(findUser(socket.id).name), 1);
-                console.log(usersInRoom);
-
                 users = users.filter(function (user) {
                     return user.id != socket.id;
                 });
-                io.to(room.room).emit('update-users', room.users);
+                io.to(room.room).emit('updateUsers', room.users);
+                console.log(findUser(socket.id).name + ' disconnected from room ' + room.room);
             }
         }
     });
