@@ -104,7 +104,7 @@ function verifyUsersInRoom(room, user) {
 io.on('connection', function (socket) {
     console.log('socket: ' + socket.id + ' connected');
 
-    io.emit('initRooms', rooms);
+    io.emit('updateRooms', rooms);
 
     socket.on('joinRoom', function (data) {
         if (!verifyUsersInRoom(data.room, data.user)) {
