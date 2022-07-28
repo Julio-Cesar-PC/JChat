@@ -101,26 +101,18 @@
     props: ["users", "currentroom", "username", "isJoined", "rooms"],
     template: ` <div>
                         <h4 class="title is-4"><strong>Sala:</strong> {{ isJoined ? currentroom  : 'Espera' }} ({{users.length}})</h4>
-                        <ul><strong>Usuários conectados:</strong>
-                            <li class="border-t border-gray-300" v-for="user in users">
-                                <div class="media-content">
-                                    <div class="content">
-                                        <p>
-                                            {{ user === username ? 'você' : user }}
-                                        </p>
-                                    </div>
-                                </div>
+                        <ul class="border-t border-gray-300"><strong>Usuários conectados:</strong>
+                            <li class="mt-2 bg-gray-100 rounded-md p-1" v-for="user in users">
+                                <p class="ml-2">
+                                    {{ user === username ? 'você' : user }}
+                                </p>
                             </li>
                         </ul>
-						<ul><strong>Salas:</strong>
-							<li class="border-t border-gray-300" v-for="room in rooms">
-								<div class="media-content">
-									<div class="content">
-										<p>
+						<ul class="mt-4 border-t border-gray-300"><strong>Salas:</strong>
+							<li class="mt-2 bg-gray-100 rounded-md p-1" v-for="room in rooms">
+										<p class="ml-2">
 											- {{ room.room }} ({{ room.users.length }})
 										</p>
-									</div>
-								</div>
 							</li>
 						</ul>
                     </div>`,
@@ -204,6 +196,14 @@
     });
   });
 
+  socket.on("userJoined", function (message) {
+    app.messages.push({
+      text: message.text,
+      user: message.user,
+      date: message.date,
+    });
+  });
+
   socket.on("userConnected", function (userId) {
     app.users.push(userId);
   });
@@ -233,3 +233,4 @@
     app.rooms = rooms;
   });
 })();
+1
