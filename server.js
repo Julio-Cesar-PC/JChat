@@ -59,14 +59,6 @@ function findRoom(room) {
     return found;
 }
 
-function getArrayOfRooms() {
-    var array = [];
-    rooms.forEach(function (r) {
-        array.push(r.room);
-    });
-    return array;
-}
-
 function findUser(userId) {
     var found = false;
     users.forEach(function (u) {
@@ -119,6 +111,7 @@ io.on('connection', function (socket) {
             socket.emit('updateUsers', room.users);
             socket.emit('initChat', room.messages);
             io.emit('updateRooms', rooms);
+            socket.broadcast.to(data.room).emit('readMsg', { room: data.room, text: 'Entrou na sala', user: data.user, date: dateFormat(new Date(), "shortTime") });
         } else {
             console.log('User ' + data.user + ' already in room ' + data.room);
             socket.emit('userAlreadyInRoom', { user: data.user, room: data.room });
@@ -127,7 +120,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on('sendMsg', function (data) {
-        var newMessage = { room: data.room, text: data.message, user: data.user, date: dateFormat(new Date(), 'shortTime') };
+        let newMessage = { room: data.room, text: data.message, user: data.user, date: dateFormat(new Date(), 'shortTime') };
         let room = findRoom(data.room);
         room.messages = room.messages.concat(newMessage);
         console.log('Message ' + data.message + ' sent by ' + data.user + ' in room ' + data.room);
@@ -148,7 +141,6 @@ io.on('connection', function (socket) {
                 users = users.filter(function (user) {
                     return user.id != socket.id;
                 });
-                io.to(room.room).emit('updateUsers', room.users);
                 console.log(findUser(socket.id).name + ' disconnected from room ' + room.room);
             }
         }
